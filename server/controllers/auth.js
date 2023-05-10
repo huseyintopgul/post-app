@@ -58,7 +58,7 @@ const login = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'Kullanıcı bulunamadı!' })
         }
-        const passwordCompare = await bcrypjs.compare(user.password, req.body.password)
+        const passwordCompare = bcrypjs.compare(user.password, password)
         if (!passwordCompare) {
             return res.status(400).jason({ message: 'Girilen şifre hatalı!' })
         } else {
