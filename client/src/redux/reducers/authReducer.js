@@ -3,19 +3,19 @@
 
 const authReducer = (state = { auth: null }, action) => {
     switch (action.type) {
-        case "KAYIT":
+        case "REGISTER":
             localStorage.setItem("auth", JSON.stringify(action.payload))
             return {
                 ...state,
                 auth: action.payload
             }
-        case "GİRİŞ":
+        case "LOGIN":
             localStorage.setItem('auth', JSON.stringify(action.payload))
             return {
                 ...state,
                 auth: action.payload
             }
-        case "ÇIKIŞ":
+        case "LOGOUT":
             localStorage.clear();
             return {
                 ...state,

@@ -1,4 +1,4 @@
-const AuthSchema = require('../models/auth.js');
+const AuthSchema = require('../models/authModels');
 const jwt = require('jsonwebtoken');
 const bcrypjs = require('bcryptjs');
 
@@ -9,22 +9,20 @@ const bcrypjs = require('bcryptjs');
 const register = async (req, res) => {
     try {
         const { userName, password, email } = req.body;
-
-        const user = await AuthSchema.findOne(email)
+        const user = await AuthSchema.findOne({ email })
         if (user) {
-            return res.status(400).json({ message: 'Girilen email adresi zaten kullanılıyor!' });
+            return (res.status(400).json({ msg: 'Girilen email adresi zaten kullanılıyor!' }));
         }
         // kullanılan emailin karaktaer kontrolü için alt kısımda oluşturduğumuz 
         // "isEmail()" fonksiyonundan yararlanıyoruz
         if (!isEmail(email)) {
-            return res.status(400).json({ message: 'Girilen email adresi geçersiz karakterler içermektedir!' })
+            return (res.status(400).json({ msg: 'Girilen email adresi geçersiz karakterler içermektedir!' }));
         }
-        if (password < 8) {
-            res.status(400).json({ message: 'Şifreniz en az 8 karakter içermelidir!' });
+        if (password.length < 6) {
+            return (res.status(400).json({ msg: 'Şifreniz en az 6 karakter içermelidir!' }));
         }
         // kontrolden geçen password ü DB ye kaydını yaparken hashliyoruz
-        const salt = await bcrypjs.genSalt(10);
-        const hashedPassword = await bcrypjs.hash(password, salt);
+        const hashedPassword = await bcrypjs.hash(password, 12);
 
         const newUser = await AuthSchema.create(
             {
@@ -34,8 +32,8 @@ const register = async (req, res) => {
             })
 
         // güvenlik(authentication & authorization) için newUser üzerinden bir token oluşturmamız gerekiyor
-        // bu token ı -jwt üzerinden sign (newUser._id) edeceğiz
-        const token = jwt.sign({ id: newUser._id }, 'SELECT_KEY', { expiresIn: '1h' });
+        // bu token i -jwt üzerinden sign (newUser._id) edeceğiz
+        const token = jwt.sign({ id: newUser._id }, 'SELECT_KEY', { expiresIn: '1h' })
 
         res.status(201).json({
             status: 'OK',
@@ -44,7 +42,7 @@ const register = async (req, res) => {
         })
     }
     catch (error) {
-        return res.status(400).json({ message: error.message })
+        return res.status(400).json({ msg: error.message })
     }
 };
 
@@ -53,19 +51,17 @@ const login = async (req, res) => {
     try {
         // bu kısımda req. içerisinde gelen EMAİL ile DB de kayıtlı olan şifrenin 
         // karşılaştırılmasını yapıyoruz ve res. döndürüyoruz.
-        const { email, password } = req.body;
-        const user = await AuthSchema.findOne(email);
+        const { email, password } = req.body
+        const user = await AuthSchema.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: 'Kullanıcı bulunamadı!' })
+            return res.status(404).json({ msg: 'Kullanıcı bulunamadı!' })
         }
-        const passwordCompare = bcrypjs.compare(user.password, password)
+        const passwordCompare = bcrypjs.compare(password, user.password)
         if (!passwordCompare) {
-            return res.status(400).jason({ message: 'Girilen şifre hatalı!' })
-        } else {
-            res.status(200).json({ message: 'Giriş işlemi başarılı.' })
+            return res.status(400).json({ msg: 'Girilen şifre hatalı!' })
         }
-        // güvenlik(authentication & authorization) için newUser üzerinden bir token oluşturmamız gerekiyor
-        // bu token ı -jwt- üzerinden sign (newUser._id) edeceğiz
+         // güvenlik(authentication & authorization) için newUser üzerinden bir token oluşturmamız gerekiyor
+        // bu token ı -jwt- üzerinden sign (newUser._id) edeceğiz    
         const token = jwt.sign({ id: user._id }, 'SELECT_KEY', { expiresIn: '1h' })
         res.status(200).json({
             status: 'OK',
@@ -74,7 +70,7 @@ const login = async (req, res) => {
         })
     }
     catch (error) {
-        res.status(404).json(error)
+        return res.status(400).json({ msg: error.message })
     }
 };
 
